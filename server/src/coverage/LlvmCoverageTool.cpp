@@ -22,6 +22,7 @@
 
 using Coverage::CoverageMap;
 using Coverage::FileCoverage;
+using SourceLine = Coverage::FileCoverage::SourceLine;
 using std::vector;
 
 LlvmCoverageTool::LlvmCoverageTool(utbot::ProjectContext projectContext,
@@ -146,7 +147,40 @@ Coverage::CoverageMap LlvmCoverageTool::getCoverageInfo() const {
         }
     });
 
+    for(auto& item : coverageMap) {
+        string filename = item.first;
+        countLineCoverage(coverageMap, filename);
+    }
+
     return coverageMap;
+}
+
+void LlvmCoverageTool::countLineCoverage(Coverage::CoverageMap& coverageMap, const string& filename) const {
+    for(auto range: coverageMap[filename].uncoveredRanges) {
+        coverageMap[filename].noCoverageLinesBorders.insert({range.start.line});
+        coverageMap[filename].noCoverageLinesBorders.insert({range.end.line});
+        for(int i = range.start.line; i <= range.end.line; i++) {
+            coverageMap[filename].noCoverageLines.insert({i});
+        }
+    }
+    for(auto range: coverageMap[filename].coveredRanges) {
+        checkLineForPartial({range.start.line},coverageMap[filename]);
+        checkLineForPartial({range.end.line},coverageMap[filename]);
+        for(int i = range.start.line + 1; i < range.end.line; i++) {
+            if(coverageMap[filename].noCoverageLines.count({ i }) == 0) {
+                coverageMap[filename].fullCoverageLines.insert({i});
+            }
+        }
+    }
+}
+
+void LlvmCoverageTool::checkLineForPartial(Coverage::FileCoverage::SourceLine line, Coverage::FileCoverage& fileCoverage) const {
+    if(fileCoverage.noCoverageLinesBorders.count(line) > 0) {
+        fileCoverage.partialCoverageLines.insert(line);
+        fileCoverage.noCoverageLines.erase(line);
+    } else {
+        fileCoverage.fullCoverageLines.insert(line);
+    }
 }
 
 nlohmann::json LlvmCoverageTool::getTotals() const {

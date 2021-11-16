@@ -22,10 +22,38 @@ namespace Coverage {
             SourcePosition start;
             SourcePosition end;
         };
+        struct SourceLine {
+            int line;
+            const bool operator < (const SourceLine& r) const {
+                return (line < r.line);
+            }
+        };
         std::vector<SourceRange> coveredRanges;
         std::vector<SourceRange> uncoveredRanges;
+        std::set<SourceLine> fullCoverageLines;
+        std::set<SourceLine> partialCoverageLines;
+        std::set<SourceLine> noCoverageLines;
+        std::set<SourceLine> noCoverageLinesBorders;
     };
+
+//    struct FileLinesCoverage {
+//        struct SourceLine {
+//            int line;
+//            const bool operator < (const SourceLine& r) const {
+//                return (line < r.line);
+//            }
+//        };
+////        std::vector<SourceLine> coveredLines;
+////        std::vector<SourceLine> uncoveredLines;
+////        std::vector<SourceLine> coveredPartiallyLines;
+//        std::set<SourceLine> fullCoverageLines;
+//        std::set<SourceLine> partialCoverageLines;
+//        std::set<SourceLine> noCoverageLines;
+//        std::set<SourceLine> noCoverageLinesBorders;
+//    };
+
     using CoverageMap = CollectionUtils::MapFileTo<FileCoverage>;
+    //using CoverageLinesMap = CollectionUtils::MapFileTo<FileLinesCoverage>;
 
     class FileTestsStatus : public std::unordered_map<std::string, testsgen::TestStatus> {
     };
